@@ -1,0 +1,90 @@
+name: Task 1 Validation
+
+on:
+  pull_request:
+    paths:
+      - "task1/**"
+      - ".github/workflows/validate-task1.yml"
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  validate:
+    name: Validate Task 1 submission
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Require Task 1 issue reference
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          TASK1_ISSUE: "1"
+        run: |
+          if ! echo "$PR_BODY" | grep -Eiq \
+            "(closes|closed|close|fixes|fixed|fix|resolves|resolved|resolve) #${TASK1_ISSUE}([^0-9]|$)"; then
+            echo "::error::Your PR must reference Task 1 using Closes #${TASK1_ISSUE}."
+            exit 1
+          fi
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up GCC
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc
+
+      - name: Validate submitted filename
+        id: source
+        shell: bash
+        run: |
+          mapfile -t files < <(
+            git diff --name-only \
+              "origin/${{ github.base_ref }}...HEAD" \
+              -- 'task1/*.c'
+          )
+
+          if [ "${#files[@]}" -ne 1 ]; then
+            echo "::error::Submit exactly one C file inside task1/."
+            exit 1
+          fi
+
+          file="${files[0]}"
+          filename="${file##*/}"
+
+          if [[ ! "$filename" =~ ^[A-Za-z]{3}[0-9]{7}\.c$ ]]; then
+            echo "::error::Invalid filename '$filename'. Expected XXX2026YYY.c, with letters case-insensitive."
+            exit 1
+          fi
+
+          echo "file=$file" >> "$GITHUB_OUTPUT"
+
+      - name: Compile program
+        run: |
+          gcc -std=c11 -Wall -Wextra -Werror \
+            "${{ steps.source.outputs.file }}" \
+            -o /tmp/task1-program
+
+      - name: Test program
+        run: |
+          check_case() {
+            input="$1"
+            expected="$2"
+            actual="$(printf '%s\n' "$input" | /tmp/task1-program)" || {
+              echo "::error::Program crashed on input: $input"
+              exit 1
+            }
+
+            if [ "$actual" != "$expected" ]; then
+              echo "::error::Input '$input': expected '$expected', got '$actual'"
+              exit 1
+            fi
+          }
+
+          check_case "12 30" "42"
+          check_case "0 0" "0"
+          check_case "-5 8" "3"
+          check_case "100 -100" "0"
+
+          echo "All Task 1 tests passed."
