@@ -1,3 +1,4 @@
+I dont like merge conflicts. They kinda suck.
 # Task 3 - Workshop bot
 Roll number: iit2025099
 Explain how this change should be integrated.
