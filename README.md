@@ -7,7 +7,7 @@ Repo for the Day 2 session of the FOSS workshop. Today is about using Git the wa
 Clone the repo and set up your Git:
 
 ```bash
-git clone https://github.com/LooninS/FOSS-Day2-2026.git
+git clone https://github.com/LooninS/Day2-FOSS.git
 cd FOSS-Day2-2026
 
 git config --global user.name "Your Name"
