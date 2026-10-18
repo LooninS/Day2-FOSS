@@ -8,7 +8,7 @@ Clone the repo and set up your Git:
 
 ```bash
 git clone https://github.com/LooninS/Day2-FOSS.git
-cd FOSS-Day2-2026
+cd Day2-FOSS
 
 git config --global user.name "Your Name"
 git config --global user.email "your.email@example.com"
